@@ -1,0 +1,502 @@
+import os
+import csv
+import pandas as pd
+#load the csv files into pandas dataframe
+filepath = os.path.join("raw_data","schools_complete.csv")
+schools_df = pd.read_csv(filepath)
+schools_df.head()
+Out[7]:
+School ID	school_name	type	size	budget
+0	0	Huang High School	District	2917	1910635
+1	1	Figueroa High School	District	2949	1884411
+2	2	Shelton High School	Charter	1761	1056600
+3	3	Hernandez High School	District	4635	3022020
+4	4	Griffin High School	Charter	1468	917500
+In [8]:
+filepath2 = os.path.join("raw_data","students_complete.csv")
+students_df = pd.read_csv(filepath2)
+students_df.head()
+Out[8]:
+Student ID	student_name	gender	grade	school_name	reading_score	math_score
+0	0	Paul Bradley	M	9th	Huang High School	66	79
+1	1	Victor Smith	M	12th	Huang High School	94	61
+2	2	Kevin Rodriguez	M	12th	Huang High School	90	60
+3	3	Dr. Richard Scott	M	12th	Huang High School	67	58
+4	4	Bonnie Ray	F	9th	Huang High School	97	84
+District Summary
+In [6]:
+#total schools
+total_schools = schools_df["school_name"].nunique()
+total_schools
+Out[6]:
+15
+In [36]:
+#total students
+total_students = int(students_df["Student ID"].nunique())
+total_students
+Out[36]:
+39170
+In [10]:
+#total budget
+total_budget = schools_df["budget"].sum()
+total_budget
+Out[10]:
+24649428
+In [17]:
+#Average math score
+avg_math_score = round(students_df["math_score"].mean(),1)
+avg_math_score
+Out[17]:
+79.0
+In [21]:
+#Average reading score
+avg_reading_score = round(students_df["reading_score"].mean(),0)
+avg_reading_score
+Out[21]:
+82.0
+In [49]:
+#total of students passing math (score above 70)
+students_passing_math = students_df[students_df["math_score"] > 70].count()["student_name"]
+#% of students passing maths
+percentage_students_passed_math = round((students_passing_math/total_students)*100,0)
+percentage_students_passed_math
+Out[49]:
+72.0
+In [55]:
+#total students passing reading
+students_passing_reading = students_df[students_df["reading_score"]>70].count()["student_name"]
+
+#percentage of students passing reading
+percentage_passing_reading = round(((students_passing_reading/total_students)*100),1)
+percentage_passing_reading
+Out[55]:
+83.0
+In [66]:
+#Overall Passing Rate
+overall_passing_rate = (percentage_students_passed_math + percentage_passing_reading)/2
+overall_passing_rate
+Out[66]:
+77.5
+In [69]:
+#Overview Table
+district_Summary_df = pd.DataFrame({"Total Schools":[total_schools],
+                      "Total Students":[total_students],
+                      "Total Budget":[total_budget],
+                      "Average Math Score":[avg_math_score],
+                      'Average Reading Score':[avg_reading_score],
+                      "% Passing Math":[percentage_students_passed_math],
+                      "% Passing Reading":[percentage_passing_reading],
+                      "Overall Passing rate":[overall_passing_rate]})
+district_Summary_df
+Out[69]:
+% Passing Math	% Passing Reading	Average Math Score	Average Reading Score	Overall Passing rate	Total Budget	Total Schools	Total Students
+0	72.0	83.0	79.0	82.0	77.5	24649428	15	39170
+School Summary
+In [116]:
+#schooltype
+school_type = schools_df.set_index(["school_name"])["type"]
+school_type
+Out[116]:
+school_name
+Huang High School        District
+Figueroa High School     District
+Shelton High School       Charter
+Hernandez High School    District
+Griffin High School       Charter
+Wilson High School        Charter
+Cabrera High School       Charter
+Bailey High School       District
+Holden High School        Charter
+Pena High School          Charter
+Wright High School        Charter
+Rodriguez High School    District
+Johnson High School      District
+Ford High School         District
+Thomas High School        Charter
+Name: type, dtype: object
+In [121]:
+#merge both the dataframes
+combined_df = pd.merge(students_df,schools_df,on="school_name")
+combined_df.head()
+
+#total students per school
+total_students_per_school = combined_df["school_name"].value_counts()
+In [133]:
+#total school budget
+budget_per_school = combined_df.groupby(["school_name"]).mean()["budget"]
+budget_per_school
+Out[133]:
+school_name
+Bailey High School       3124928.0
+Cabrera High School      1081356.0
+Figueroa High School     1884411.0
+Ford High School         1763916.0
+Griffin High School       917500.0
+Hernandez High School    3022020.0
+Holden High School        248087.0
+Huang High School        1910635.0
+Johnson High School      3094650.0
+Pena High School          585858.0
+Rodriguez High School    2547363.0
+Shelton High School      1056600.0
+Thomas High School       1043130.0
+Wilson High School       1319574.0
+Wright High School       1049400.0
+Name: budget, dtype: float64
+In [171]:
+#budget per student 
+budget_per_student = budget_per_school/total_students_per_school
+budget_per_student
+Out[171]:
+Bailey High School       628.0
+Cabrera High School      582.0
+Figueroa High School     639.0
+Ford High School         644.0
+Griffin High School      625.0
+Hernandez High School    652.0
+Holden High School       581.0
+Huang High School        655.0
+Johnson High School      650.0
+Pena High School         609.0
+Rodriguez High School    637.0
+Shelton High School      600.0
+Thomas High School       638.0
+Wilson High School       578.0
+Wright High School       583.0
+dtype: float64
+In [148]:
+#Average math Score
+#total math score per school
+avg_math_scores = round(combined_df.groupby(["school_name"]).mean()["math_score"],2)
+avg_math_scores
+Out[148]:
+school_name
+Bailey High School       77.05
+Cabrera High School      83.06
+Figueroa High School     76.71
+Ford High School         77.10
+Griffin High School      83.35
+Hernandez High School    77.29
+Holden High School       83.80
+Huang High School        76.63
+Johnson High School      77.07
+Pena High School         83.84
+Rodriguez High School    76.84
+Shelton High School      83.36
+Thomas High School       83.42
+Wilson High School       83.27
+Wright High School       83.68
+Name: math_score, dtype: float64
+In [149]:
+#avergae reading scores per school
+#total reading scores per school
+avg_reading_scores = round(combined_df.groupby(["school_name"]).mean()["reading_score"],2)
+avg_reading_scores
+Out[149]:
+school_name
+Bailey High School       81.03
+Cabrera High School      83.98
+Figueroa High School     81.16
+Ford High School         80.75
+Griffin High School      83.82
+Hernandez High School    80.93
+Holden High School       83.81
+Huang High School        81.18
+Johnson High School      80.97
+Pena High School         84.04
+Rodriguez High School    80.74
+Shelton High School      83.73
+Thomas High School       83.85
+Wilson High School       83.99
+Wright High School       83.96
+Name: reading_score, dtype: float64
+In [150]:
+#students passing math by schools
+students_passing_math = combined_df[(combined_df["math_score"]>70)]
+students_passing_math_per_school = students_passing_math.groupby(["school_name"]).count()["student_name"]
+percentage_passing_math_schools = round((students_passing_math_per_school/students_per_school)*100,2)
+percentage_passing_math_schools
+Out[150]:
+school_name
+Bailey High School       64.63
+Cabrera High School      89.56
+Figueroa High School     63.75
+Ford High School         65.75
+Griffin High School      89.71
+Hernandez High School    64.75
+Holden High School       90.63
+Huang High School        63.32
+Johnson High School      63.85
+Pena High School         91.68
+Rodriguez High School    64.07
+Shelton High School      89.89
+Thomas High School       90.21
+Wilson High School       90.93
+Wright High School       90.28
+dtype: float64
+In [151]:
+#finding % of students passing reading schoolwise
+
+#find the total students passing reading from the combined dataset
+students_passing_reading = combined_df[combined_df["reading_score"]>70]
+
+#find the students passing reading schoolwise by doing groupby
+students_passing_reading_per_school = students_passing_reading.groupby(["school_name"]).count()["student_name"]
+
+#percentage of students passing reading per school
+percentage_passing_reading_schoolwise = round((students_passing_reading_per_school/students_per_school)*100,2)
+percentage_passing_reading_schoolwise
+Out[151]:
+school_name
+Bailey High School       79.30
+Cabrera High School      93.86
+Figueroa High School     78.43
+Ford High School         77.51
+Griffin High School      93.39
+Hernandez High School    78.19
+Holden High School       92.74
+Huang High School        78.81
+Johnson High School      78.28
+Pena High School         92.20
+Rodriguez High School    77.74
+Shelton High School      92.62
+Thomas High School       92.91
+Wilson High School       93.25
+Wright High School       93.44
+dtype: float64
+In [152]:
+#overall passing rate per school
+overall_passing_rate_schoolwise = (percentage_passing_math_schools + percentage_passing_reading_schoolwise)/2
+overall_passing_rate_schoolwise
+Out[152]:
+school_name
+Bailey High School       71.965
+Cabrera High School      91.710
+Figueroa High School     71.090
+Ford High School         71.630
+Griffin High School      91.550
+Hernandez High School    71.470
+Holden High School       91.685
+Huang High School        71.065
+Johnson High School      71.065
+Pena High School         91.940
+Rodriguez High School    70.905
+Shelton High School      91.255
+Thomas High School       91.560
+Wilson High School       92.090
+Wright High School       91.860
+dtype: float64
+In [172]:
+#creating a summary of the school data
+school_summary_df = pd.DataFrame({"School Type":school_type,
+                                 "Total Students":total_students_per_school,
+                                 "Total School Budget":budget_per_school,
+                                  "Budget per student":budget_per_student,
+                                 "Average Math Score Schoolwise":avg_math_scores,
+                                 "Average Reading Score Schoolwise":avg_reading_scores,
+                                 "% Passing Math Schoolwise":percentage_passing_math_schools,
+                                 "% Passing Reading Schoolwise":percentage_passing_reading_schoolwise,
+                                 "Overall Passing rate":overall_passing_rate_schoolwise})
+school_summary_df
+Out[172]:
+% Passing Math Schoolwise	% Passing Reading Schoolwise	Average Math Score Schoolwise	Average Reading Score Schoolwise	Budget per student	Overall Passing rate	School Type	Total School Budget	Total Students
+Bailey High School	64.63	79.30	77.05	81.03	628.0	71.965	District	3124928.0	4976
+Cabrera High School	89.56	93.86	83.06	83.98	582.0	91.710	Charter	1081356.0	1858
+Figueroa High School	63.75	78.43	76.71	81.16	639.0	71.090	District	1884411.0	2949
+Ford High School	65.75	77.51	77.10	80.75	644.0	71.630	District	1763916.0	2739
+Griffin High School	89.71	93.39	83.35	83.82	625.0	91.550	Charter	917500.0	1468
+Hernandez High School	64.75	78.19	77.29	80.93	652.0	71.470	District	3022020.0	4635
+Holden High School	90.63	92.74	83.80	83.81	581.0	91.685	Charter	248087.0	427
+Huang High School	63.32	78.81	76.63	81.18	655.0	71.065	District	1910635.0	2917
+Johnson High School	63.85	78.28	77.07	80.97	650.0	71.065	District	3094650.0	4761
+Pena High School	91.68	92.20	83.84	84.04	609.0	91.940	Charter	585858.0	962
+Rodriguez High School	64.07	77.74	76.84	80.74	637.0	70.905	District	2547363.0	3999
+Shelton High School	89.89	92.62	83.36	83.73	600.0	91.255	Charter	1056600.0	1761
+Thomas High School	90.21	92.91	83.42	83.85	638.0	91.560	Charter	1043130.0	1635
+Wilson High School	90.93	93.25	83.27	83.99	578.0	92.090	Charter	1319574.0	2283
+Wright High School	90.28	93.44	83.68	83.96	583.0	91.860	Charter	1049400.0	1800
+In [176]:
+# Minor data munging
+per_school_summary = school_summary_df[["School Type",  "Total School Budget","Budget per student",
+                                         "Average Math Score Schoolwise", "Average Reading Score Schoolwise", 
+                                         "% Passing Math Schoolwise", "% Passing Reading Schoolwise", 
+                                         "Overall Passing rate"]]
+
+#formatting to insert dollar sign 
+per_school_summary["Total School Budget"] = per_school_summary["Total School Budget"].map("${:,.2f}".format)
+per_school_summary["Budget per student"] = per_school_summary["Budget per student"].map("${:,.2f}".format)
+
+#display the dataframe
+per_school_summary
+C:\tools\Anaconda3\envs\py36\lib\site-packages\ipykernel_launcher.py:8: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  
+C:\tools\Anaconda3\envs\py36\lib\site-packages\ipykernel_launcher.py:9: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  if __name__ == '__main__':
+Out[176]:
+School Type	Total School Budget	Budget per student	Average Math Score Schoolwise	Average Reading Score Schoolwise	% Passing Math Schoolwise	% Passing Reading Schoolwise	Overall Passing rate
+Bailey High School	District	$3,124,928.00</td> <td>$628.00	77.05	81.03	64.63	79.30	71.965
+Cabrera High School	Charter	$1,081,356.00</td> <td>$582.00	83.06	83.98	89.56	93.86	91.710
+Figueroa High School	District	$1,884,411.00</td> <td>$639.00	76.71	81.16	63.75	78.43	71.090
+Ford High School	District	$1,763,916.00</td> <td>$644.00	77.10	80.75	65.75	77.51	71.630
+Griffin High School	Charter	$917,500.00</td> <td>$625.00	83.35	83.82	89.71	93.39	91.550
+Hernandez High School	District	$3,022,020.00</td> <td>$652.00	77.29	80.93	64.75	78.19	71.470
+Holden High School	Charter	$248,087.00</td> <td>$581.00	83.80	83.81	90.63	92.74	91.685
+Huang High School	District	$1,910,635.00</td> <td>$655.00	76.63	81.18	63.32	78.81	71.065
+Johnson High School	District	$3,094,650.00</td> <td>$650.00	77.07	80.97	63.85	78.28	71.065
+Pena High School	Charter	$585,858.00</td> <td>$609.00	83.84	84.04	91.68	92.20	91.940
+Rodriguez High School	District	$2,547,363.00</td> <td>$637.00	76.84	80.74	64.07	77.74	70.905
+Shelton High School	Charter	$1,056,600.00</td> <td>$600.00	83.36	83.73	89.89	92.62	91.255
+Thomas High School	Charter	$1,043,130.00</td> <td>$638.00	83.42	83.85	90.21	92.91	91.560
+Wilson High School	Charter	$1,319,574.00</td> <td>$578.00	83.27	83.99	90.93	93.25	92.090
+Wright High School	Charter	$1,049,400.00</td> <td>$583.00	83.68	83.96	90.28	93.44	91.860
+Top Performing Schools by Passing Rate
+In [182]:
+top_performing_schools = per_school_summary.sort_values(["Overall Passing rate"],ascending = False).head(5)
+top_performing_schools
+Out[182]:
+School Type	Total School Budget	Budget per student	Average Math Score Schoolwise	Average Reading Score Schoolwise	% Passing Math Schoolwise	% Passing Reading Schoolwise	Overall Passing rate
+Wilson High School	Charter	$1,319,574.00</td> <td>$578.00	83.27	83.99	90.93	93.25	92.090
+Pena High School	Charter	$585,858.00</td> <td>$609.00	83.84	84.04	91.68	92.20	91.940
+Wright High School	Charter	$1,049,400.00</td> <td>$583.00	83.68	83.96	90.28	93.44	91.860
+Cabrera High School	Charter	$1,081,356.00</td> <td>$582.00	83.06	83.98	89.56	93.86	91.710
+Holden High School	Charter	$248,087.00</td> <td>$581.00	83.80	83.81	90.63	92.74	91.685
+Bottom 5 Performing Schools (By Passing Rate)
+In [178]:
+bottom_five_schools = per_school_summary.sort_values(["Overall Passing rate"],ascending = False).tail(5)
+bottom_five_schools
+Out[178]:
+School Type	Total School Budget	Budget per student	Average Math Score Schoolwise	Average Reading Score Schoolwise	% Passing Math Schoolwise	% Passing Reading Schoolwise	Overall Passing rate
+Hernandez High School	District	$3,022,020.00</td> <td>$652.00	77.29	80.93	64.75	78.19	71.470
+Figueroa High School	District	$1,884,411.00</td> <td>$639.00	76.71	81.16	63.75	78.43	71.090
+Huang High School	District	$1,910,635.00</td> <td>$655.00	76.63	81.18	63.32	78.81	71.065
+Johnson High School	District	$3,094,650.00</td> <td>$650.00	77.07	80.97	63.85	78.28	71.065
+Rodriguez High School	District	$2,547,363.00</td> <td>$637.00	76.84	80.74	64.07	77.74	70.905
+Math Scores by Grade
+In [179]:
+avg_math_scores_grade = round(combined_df.groupby(["grade"]).mean()["math_score"],2)
+avg_math_scores_grade
+Out[179]:
+grade
+10th    78.94
+11th    79.08
+12th    78.99
+9th     78.94
+Name: math_score, dtype: float64
+Reading Scores by grade
+In [180]:
+avg_reading_score_grade = round(combined_df.groupby(["grade"]).mean()["reading_score"],2)
+avg_reading_score_grade
+Out[180]:
+grade
+10th    81.87
+11th    81.89
+12th    81.82
+9th     81.91
+Name: reading_score, dtype: float64
+Scores by School Spending
+In [220]:
+#create bins in which data will be held
+bins = [0, 585, 615, 645, 675]
+names = ["<$585", "$585-615", "$615-645", "$645-675"]
+In [221]:
+#categorize the spendings 
+per_school_summary["Spending Ranges (Per Student)"] = pd.cut(budget_per_student,bins,labels = names)
+per_school_summary
+Out[221]:
+School Type	Total School Budget	Budget per student	Average Math Score Schoolwise	Average Reading Score Schoolwise	% Passing Math Schoolwise	% Passing Reading Schoolwise	Overall Passing rate	Spending Ranges (Per Student)	Total Students	Size of the school
+Bailey High School	District	$3,124,928.00</td> <td>$628.00	77.05	81.03	64.63	79.30	71.965	$615-645</td> <td>Large</td> <td>Large</td> </tr> <tr> <th>Cabrera High School</th> <td>Charter</td> <td>$1,081,356.00	$582.00	83.06	83.98	89.56	93.86	91.710	<$585	Medium	Medium
+Figueroa High School	District	$1,884,411.00</td> <td>$639.00	76.71	81.16	63.75	78.43	71.090	$615-645</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Ford High School</th> <td>District</td> <td>$1,763,916.00	$644.00</td> <td>77.10</td> <td>80.75</td> <td>65.75</td> <td>77.51</td> <td>71.630</td> <td>$615-645	Medium	Medium
+Griffin High School	Charter	$917,500.00</td> <td>$625.00	83.35	83.82	89.71	93.39	91.550	$615-645</td> <td>Small</td> <td>Small</td> </tr> <tr> <th>Hernandez High School</th> <td>District</td> <td>$3,022,020.00	$652.00</td> <td>77.29</td> <td>80.93</td> <td>64.75</td> <td>78.19</td> <td>71.470</td> <td>$645-675	Large	Large
+Holden High School	Charter	$248,087.00</td> <td>$581.00	83.80	83.81	90.63	92.74	91.685	<$585</td> <td>Small</td> <td>Small</td> </tr> <tr> <th>Huang High School</th> <td>District</td> <td>$1,910,635.00	$655.00</td> <td>76.63</td> <td>81.18</td> <td>63.32</td> <td>78.81</td> <td>71.065</td> <td>$645-675	Medium	Medium
+Johnson High School	District	$3,094,650.00</td> <td>$650.00	77.07	80.97	63.85	78.28	71.065	$645-675</td> <td>Large</td> <td>Large</td> </tr> <tr> <th>Pena High School</th> <td>Charter</td> <td>$585,858.00	$609.00</td> <td>83.84</td> <td>84.04</td> <td>91.68</td> <td>92.20</td> <td>91.940</td> <td>$585-615	Small	Small
+Rodriguez High School	District	$2,547,363.00</td> <td>$637.00	76.84	80.74	64.07	77.74	70.905	$615-645</td> <td>Large</td> <td>Large</td> </tr> <tr> <th>Shelton High School</th> <td>Charter</td> <td>$1,056,600.00	$600.00</td> <td>83.36</td> <td>83.73</td> <td>89.89</td> <td>92.62</td> <td>91.255</td> <td>$585-615	Medium	Medium
+Thomas High School	Charter	$1,043,130.00</td> <td>$638.00	83.42	83.85	90.21	92.91	91.560	$615-645</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Wilson High School</th> <td>Charter</td> <td>$1,319,574.00	$578.00	83.27	83.99	90.93	93.25	92.090	<$585	Medium	Medium
+Wright High School	Charter	$1,049,400.00</td> <td>$583.00	83.68	83.96	90.28	93.44	91.860	<$585	Medium	Medium
+Scores Based on Spending Ranges
+In [222]:
+avg_math_score_spending = round(per_school_summary.groupby(["Spending Ranges (Per Student)"]).mean()["Average Math Score Schoolwise"],2)
+avg_reading_score_spending = round(per_school_summary.groupby(["Spending Ranges (Per Student)"]).mean()["Average Reading Score Schoolwise"],2)
+students_passing_math_spending = round(per_school_summary.groupby(["Spending Ranges (Per Student)"]).mean()["% Passing Math Schoolwise"],2)
+students_passing_reading_spending = round(per_school_summary.groupby(["Spending Ranges (Per Student)"]).mean()["% Passing Reading Schoolwise"],2)
+overall_pass_rate_spending = (students_passing_math_spending + students_passing_reading_spending)/2
+In [223]:
+scores_based_spending = pd.DataFrame({"Average Math Score (Spending)":avg_math_score_spending,
+                                     "Average Reading Score (Spending)":avg_reading_score_spending,
+                                     "% Passing Math (Spending)":students_passing_math_spending,
+                                     "%Passing Reading (Spending)":students_passing_reading_spending ,
+                                     "Overall Passing rate (Spending)":overall_pass_rate_spending})
+
+#Minor data Munging
+scores_based_spending = scores_based_spending[["Average Math Score (Spending)","Average Reading Score (Spending)","% Passing Math (Spending)",
+                         "%Passing Reading (Spending)","Overall Passing rate (Spending)"]]
+
+#display the dataframe
+scores_based_spending
+Out[223]:
+Average Math Score (Spending)	Average Reading Score (Spending)	% Passing Math (Spending)	%Passing Reading (Spending)	Overall Passing rate (Spending)
+Spending Ranges (Per Student)					
+<$585	83.45	83.94	90.35	93.32	91.835
+$585-615</th> <td>83.60</td> <td>83.88</td> <td>90.78</td> <td>92.41</td> <td>91.595</td> </tr> <tr> <th>$615-645	79.08	81.89	73.02	83.21	78.115
+$645-675	77.00	81.03	63.97	78.43	71.200
+Scores by School Size
+In [226]:
+#create bins to categorise the schools based on size
+bins_size = [0,1500,3000,5000]
+labels_size = ["Small","Medium","Large"]
+In [227]:
+#categorise the dataframe
+per_school_summary["Size of the school"] = pd.cut(school_summary_df["Total Students"],bins_size,labels = labels_size)
+per_school_summary
+Out[227]:
+School Type	Total School Budget	Budget per student	Average Math Score Schoolwise	Average Reading Score Schoolwise	% Passing Math Schoolwise	% Passing Reading Schoolwise	Overall Passing rate	Spending Ranges (Per Student)	Total Students	Size of the school
+Bailey High School	District	$3,124,928.00	$628.00</td> <td>77.05</td> <td>81.03</td> <td>64.63</td> <td>79.30</td> <td>71.965</td> <td>$615-645	Large	Large
+Cabrera High School	Charter	$1,081,356.00</td> <td>$582.00	83.06	83.98	89.56	93.86	91.710	<$585</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Figueroa High School</th> <td>District</td> <td>$1,884,411.00	$639.00</td> <td>76.71</td> <td>81.16</td> <td>63.75</td> <td>78.43</td> <td>71.090</td> <td>$615-645	Medium	Medium
+Ford High School	District	$1,763,916.00</td> <td>$644.00	77.10	80.75	65.75	77.51	71.630	$615-645</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Griffin High School</th> <td>Charter</td> <td>$917,500.00	$625.00</td> <td>83.35</td> <td>83.82</td> <td>89.71</td> <td>93.39</td> <td>91.550</td> <td>$615-645	Small	Small
+Hernandez High School	District	$3,022,020.00</td> <td>$652.00	77.29	80.93	64.75	78.19	71.470	$645-675</td> <td>Large</td> <td>Large</td> </tr> <tr> <th>Holden High School</th> <td>Charter</td> <td>$248,087.00	$581.00	83.80	83.81	90.63	92.74	91.685	<$585	Small	Small
+Huang High School	District	$1,910,635.00</td> <td>$655.00	76.63	81.18	63.32	78.81	71.065	$645-675</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Johnson High School</th> <td>District</td> <td>$3,094,650.00	$650.00</td> <td>77.07</td> <td>80.97</td> <td>63.85</td> <td>78.28</td> <td>71.065</td> <td>$645-675	Large	Large
+Pena High School	Charter	$585,858.00</td> <td>$609.00	83.84	84.04	91.68	92.20	91.940	$585-615</td> <td>Small</td> <td>Small</td> </tr> <tr> <th>Rodriguez High School</th> <td>District</td> <td>$2,547,363.00	$637.00</td> <td>76.84</td> <td>80.74</td> <td>64.07</td> <td>77.74</td> <td>70.905</td> <td>$615-645	Large	Large
+Shelton High School	Charter	$1,056,600.00</td> <td>$600.00	83.36	83.73	89.89	92.62	91.255	$585-615</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Thomas High School</th> <td>Charter</td> <td>$1,043,130.00	$638.00</td> <td>83.42</td> <td>83.85</td> <td>90.21</td> <td>92.91</td> <td>91.560</td> <td>$615-645	Medium	Medium
+Wilson High School	Charter	$1,319,574.00</td> <td>$578.00	83.27	83.99	90.93	93.25	92.090	<$585</td> <td>Medium</td> <td>Medium</td> </tr> <tr> <th>Wright High School</th> <td>Charter</td> <td>$1,049,400.00	$583.00	83.68	83.96	90.28	93.44	91.860	<$585	Medium	Medium
+In [228]:
+avg_math_score_size = per_school_summary.groupby(["Size of the school"]).mean()["Average Math Score Schoolwise"]
+avg_reading_score_size = per_school_summary.groupby(["Size of the school"]).mean()["Average Reading Score Schoolwise"]
+percentage_passing_math_size = per_school_summary.groupby(["Size of the school"]).mean()["% Passing Math Schoolwise"]
+percentage_passing_reading_size = per_school_summary.groupby(["Size of the school"]).mean()["% Passing Reading Schoolwise"]
+overall_passing_rate = per_school_summary.groupby(["Size of the school"]).mean()["Overall Passing rate"]
+In [229]:
+scores_school_size = pd.DataFrame({"Average Math Score":avg_math_score_size,
+                                  "Average Reading Score":avg_reading_score_size,
+                                  "% Passing Math":percentage_passing_math_size,
+                                  "% Passing Reading":percentage_passing_reading_size,
+                                  "Overall Passing rate":overall_passing_rate})
+scores_school_size = scores_school_size[["Average Math Score","Average Reading Score",
+                                        "% Passing Math","% Passing Reading",]]
+Scores by School Type
+In [230]:
+avg_math_score_type = per_school_summary.groupby(["School Type"]).mean()["Average Math Score Schoolwise"]
+avg_reading_score_type = per_school_summary.groupby(["School Type"]).mean()["Average Reading Score Schoolwise"]
+percentage_passing_math_type = per_school_summary.groupby(["School Type"]).mean()["% Passing Math Schoolwise"]
+percentage_passing_reading_type = per_school_summary.groupby(["School Type"]).mean()["% Passing Reading Schoolwise"]
+overall_passing_rate_type = per_school_summary.groupby(["School Type"]).mean()["Overall Passing rate"]
+In [231]:
+scores_school_type = pd.DataFrame({"Average Math Score":avg_math_score_type,
+                                  "Average Reading Score":avg_reading_score_type,
+                                  "% Passing Math":percentage_passing_math_type,
+                                  "% Passing Reading":percentage_passing_reading_type,
+                                  "Overall Passing rate":overall_passing_rate_type})
+scores_school_type = scores_school_type[["Average Math Score","Average Reading Score",
+                                        "% Passing Math","% Passing Reading","Overall Passing rate"]]
+scores_school_type
+Out[231]:
+Average Math Score	Average Reading Score	% Passing Math	% Passing Reading
+School Type				
+Charter	83.472500	83.897500	90.361250	93.051250
+District	76.955714	80.965714	64.302857	78.322857
